@@ -1,6 +1,8 @@
-﻿namespace SceneGroupLoader
+﻿using UnityEngine;
+
+namespace SceneGroupLoader
 {
-    public class SceneGroupLoaderComponent
+    public class SceneGroupLoaderComponent : MonoBehaviour
     {
         public SceneGroupLoader SceneGroupLoader = new SceneGroupLoader();
 
