@@ -81,7 +81,7 @@ namespace SceneGroupLoader
             Debug.LogFormat("UnloadSceneGroup: unload sceneGroup {0}", ((AsyncSceneGroupLoader.AsyncSceneGroup)asyncSceneGroup).SceneGroup.name);
 
             Assert.IsNull(inProgressSceneGroup, "Scene group load is not allowed when another async operation is in progress");
-            Assert.AreEqual(0, loadedButNotActivatedSceneGroups.Count, "Unload is not allowed when another scene group has been loaded but not yet activated");
+            Assert.AreEqual(0, loadedButNotActivatedSceneGroups.Count, "Unload is not allowed when a scene group has been loaded but not yet activated");
             asyncSceneGroupLoader.UnloadSceneGroupAsync((AsyncSceneGroupLoader.AsyncSceneGroup)asyncSceneGroup);
             inProgressSceneGroup = new InProgressSceneGroup(asyncSceneGroup, () => { UnloadSceneGroupDone(asyncSceneGroup, onDone); });
         }
