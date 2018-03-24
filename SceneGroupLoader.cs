@@ -1,4 +1,5 @@
-﻿using UnityEngine.Assertions;
+﻿using System.Collections.Generic;
+using UnityEngine.Assertions;
 
 namespace SceneGroupLoader
 {
@@ -13,24 +14,30 @@ namespace SceneGroupLoader
         private SceneGroupHandle currentOperation;
         private OnDone currentCompletionCallback;
 
+        private Queue<SceneGroupHandle> loadedButNotActivatedSceneGroups = new Queue<SceneGroupHandle>();
+
         public void LoadSceneGroup(SceneGroup sceneGroup, OnDone onDone)
         {
             Assert.IsNull(currentOperation, "Scene group load is not allowed when another async operation is in progress");
             SceneGroupHandle sceneGroupHandle = asyncSceneGroupLoader.LoadSceneGroupAsync(sceneGroup);
+            loadedButNotActivatedSceneGroups.Enqueue(sceneGroupHandle);
             currentOperation = sceneGroupHandle;
             currentCompletionCallback = (x) => LoadSceneGroupDone(onDone);
         }
 
         private void LoadSceneGroupDone(OnDone onDone)
         {
+            currentOperation = null;
             onDone(currentOperation);
         }
 
         public void ActivateSceneGroup(SceneGroupHandle asyncSceneGroup, OnDone onDone)
         {
-            Assert.IsNull(currentOperation, "Scene group load is not allowed when another async operation is in progress");
-            Assert.AreEqual(currentOperation, asyncSceneGroup, "Activation must activate the previously-loaded scene group");
+            Assert.IsNull(currentOperation, "Scene group activation is not allowed when another async operation is in progress");
+            Assert.AreEqual(loadedButNotActivatedSceneGroups.Peek(), asyncSceneGroup, "Activation must activate the next loaded scene group in the queue");
+            loadedButNotActivatedSceneGroups.Dequeue();
             asyncSceneGroupLoader.ActivateSceneGroupAsync((AsyncSceneGroupLoader.AsyncSceneGroup)asyncSceneGroup);
+            currentOperation = asyncSceneGroup;
             currentCompletionCallback = (x) => ActivateSceneGroupDone(onDone);
         }
 
@@ -43,6 +50,7 @@ namespace SceneGroupLoader
         public void UnloadSceneGroup(SceneGroupHandle asyncSceneGroup, OnDone onDone)
         {
             Assert.IsNull(currentOperation, "Scene group load is not allowed when another async operation is in progress");
+            Assert.AreEqual(0, loadedButNotActivatedSceneGroups.Count, "Unload is not allowed when another scene group has been loaded but not yet activated");
             asyncSceneGroupLoader.UnloadSceneGroupAsync((AsyncSceneGroupLoader.AsyncSceneGroup)asyncSceneGroup);
             currentOperation = asyncSceneGroup;
             currentCompletionCallback = (x) => UnloadSceneGroupDone(onDone);
