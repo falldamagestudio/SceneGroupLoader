@@ -27,7 +27,7 @@ namespace SceneGroupLoader
 
                 public AsyncOperation AsyncOperation;
 
-                public AsyncScene(string name)
+                public AsyncScene()
                 {
                     Status = LoadStatus.NotLoaded;
                     AsyncOperation = null;
@@ -42,9 +42,10 @@ namespace SceneGroupLoader
             public AsyncSceneGroup(SceneGroup sceneGroup)
             {
                 Status = LoadStatus.NotLoaded;
+                SceneGroup = sceneGroup;
                 AsyncScenes = new List<AsyncScene>();
                 foreach (string sceneName in sceneGroup.Scenes)
-                    AsyncScenes.Add(new AsyncScene(sceneName));
+                    AsyncScenes.Add(new AsyncScene());
             }
         }
 
