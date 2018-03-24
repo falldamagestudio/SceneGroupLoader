@@ -44,7 +44,7 @@ namespace SceneGroupLoader
                 Status = LoadStatus.NotLoaded;
                 SceneGroup = sceneGroup;
                 AsyncScenes = new List<AsyncScene>();
-                foreach (string sceneName in sceneGroup.Scenes)
+                for (int i = 0; i < sceneGroup.Scenes.Count; i++)
                     AsyncScenes.Add(new AsyncScene());
             }
         }
@@ -69,7 +69,7 @@ namespace SceneGroupLoader
             Assert.IsNotNull(asyncSceneGroup);
             AsyncSceneGroup.AsyncScene asyncScene = asyncSceneGroup.AsyncScenes[i];
             Assert.AreEqual(LoadStatus.NotLoaded, asyncScene.Status);
-            AsyncOperation op = SceneManager.LoadSceneAsync(asyncSceneGroup.SceneGroup.Scenes[i], UnityEngine.SceneManagement.LoadSceneMode.Additive);
+            AsyncOperation op = SceneManager.LoadSceneAsync(asyncSceneGroup.SceneGroup.Scenes[i].SceneName, UnityEngine.SceneManagement.LoadSceneMode.Additive);
             op.allowSceneActivation = false;
 
             asyncScene.AsyncOperation = op;
