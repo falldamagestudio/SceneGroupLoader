@@ -21,6 +21,8 @@ namespace SceneGroupLoader
 
         public void LoadSceneGroup(SceneGroup sceneGroup, OnDone onDone)
         {
+            Assert.IsNotNull(sceneGroup);
+
             Debug.LogFormat("LoadSceneGroup: load sceneGroup {0}", sceneGroup.name);
 
             Assert.IsNull(currentOperation, "Scene group load is not allowed when another async operation is in progress");
@@ -35,11 +37,14 @@ namespace SceneGroupLoader
             Debug.LogFormat("LoadSceneGroup: load sceneGroup {0} done", ((AsyncSceneGroupLoader.AsyncSceneGroup)currentOperation).SceneGroup.name);
 
             currentOperation = null;
-            onDone(currentOperation);
+            if (onDone != null)
+                onDone(currentOperation);
         }
 
         public void ActivateSceneGroup(SceneGroupHandle asyncSceneGroup, OnDone onDone)
         {
+            Assert.IsNotNull(asyncSceneGroup);
+
             Debug.LogFormat("ActivateSceneGroup: activate sceneGroup {0}", ((AsyncSceneGroupLoader.AsyncSceneGroup)asyncSceneGroup).SceneGroup.name);
 
             Assert.IsNull(currentOperation, "Scene group activation is not allowed when another async operation is in progress");
@@ -55,11 +60,14 @@ namespace SceneGroupLoader
             Debug.LogFormat("ActivateSceneGroup: activate sceneGroup {0} done", ((AsyncSceneGroupLoader.AsyncSceneGroup)currentOperation).SceneGroup.name);
 
             currentOperation = null;
-            onDone(currentOperation);
+            if (onDone != null)
+                onDone(currentOperation);
         }
 
         public void UnloadSceneGroup(SceneGroupHandle asyncSceneGroup, OnDone onDone)
         {
+            Assert.IsNotNull(asyncSceneGroup);
+
             Debug.LogFormat("UnloadSceneGroup: unload sceneGroup {0}", ((AsyncSceneGroupLoader.AsyncSceneGroup)asyncSceneGroup).SceneGroup.name);
 
             Assert.IsNull(currentOperation, "Scene group load is not allowed when another async operation is in progress");
@@ -74,7 +82,8 @@ namespace SceneGroupLoader
             Debug.LogFormat("UnloadSceneGroup: unload sceneGroup {0} done", ((AsyncSceneGroupLoader.AsyncSceneGroup)currentOperation).SceneGroup.name);
 
             currentOperation = null;
-            onDone(currentOperation);
+            if (onDone != null)
+                onDone(currentOperation);
         }
 
         public void UpdateStatus()
