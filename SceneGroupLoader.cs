@@ -91,13 +91,18 @@ namespace SceneGroupLoader
 
         public void UpdateStatus()
         {
-            asyncSceneGroupLoader.UpdateStatus((AsyncSceneGroupLoader.AsyncSceneGroup)currentInProgressSceneGroup);
-
-            if ((currentCompletionCallback != null) && !asyncSceneGroupLoader.IsAsyncSceneGroupOperationInProgress((AsyncSceneGroupLoader.AsyncSceneGroup)currentInProgressSceneGroup))
+            if (currentInProgressSceneGroup != null)
             {
-                OnDone callback = currentCompletionCallback;
-                currentCompletionCallback = null;
-                callback(currentInProgressSceneGroup);
+                Assert.IsNotNull(currentCompletionCallback);
+
+                asyncSceneGroupLoader.UpdateStatus((AsyncSceneGroupLoader.AsyncSceneGroup)currentInProgressSceneGroup);
+
+                if (!asyncSceneGroupLoader.IsAsyncSceneGroupOperationInProgress((AsyncSceneGroupLoader.AsyncSceneGroup)currentInProgressSceneGroup))
+                {
+                    OnDone callback = currentCompletionCallback;
+                    currentCompletionCallback = null;
+                    callback(currentInProgressSceneGroup);
+                }
             }
         }
     }
