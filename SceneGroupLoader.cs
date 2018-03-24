@@ -15,8 +15,21 @@ namespace SceneGroupLoader
 
         private AsyncSceneGroupLoader asyncSceneGroupLoader = new AsyncSceneGroupLoader();
 
-        private SceneGroupHandle currentInProgressSceneGroup;
-        private Action currentCompletionCallback;
+        private class InProgressSceneGroup
+        {
+            public SceneGroupHandle CurrentInProgressSceneGroup;
+            public Action CurrentCompletionCallback;
+
+            public InProgressSceneGroup(SceneGroupHandle currentInProgressSceneGroup, Action currentCompletionCallback)
+            {
+                Assert.IsNotNull(currentInProgressSceneGroup);
+                Assert.IsNotNull(currentCompletionCallback);
+                CurrentInProgressSceneGroup = currentInProgressSceneGroup;
+                CurrentCompletionCallback = currentCompletionCallback;
+            }
+        }
+
+        private InProgressSceneGroup inProgressSceneGroup;
 
         private Queue<SceneGroupHandle> loadedButNotActivatedSceneGroups = new Queue<SceneGroupHandle>();
 
@@ -26,10 +39,10 @@ namespace SceneGroupLoader
 
             Debug.LogFormat("LoadSceneGroup: load sceneGroup {0}", sceneGroup.name);
 
-            Assert.IsNull(currentInProgressSceneGroup, "Scene group load is not allowed when another async operation is in progress");
+            Assert.IsNull(inProgressSceneGroup, "Scene group load is not allowed when another async operation is in progress");
             SceneGroupHandle sceneGroupHandle = asyncSceneGroupLoader.LoadSceneGroupAsync(sceneGroup);
             loadedButNotActivatedSceneGroups.Enqueue(sceneGroupHandle);
-            SetInProgressSceneGroup(sceneGroupHandle, () => { LoadSceneGroupDone(sceneGroupHandle, onDone); });
+            inProgressSceneGroup = new InProgressSceneGroup(sceneGroupHandle, () => { LoadSceneGroupDone(sceneGroupHandle, onDone); });
         }
 
         private void LoadSceneGroupDone(SceneGroupHandle handle, OnDone onDone)
@@ -46,11 +59,11 @@ namespace SceneGroupLoader
 
             Debug.LogFormat("ActivateSceneGroup: activate sceneGroup {0}", ((AsyncSceneGroupLoader.AsyncSceneGroup)asyncSceneGroup).SceneGroup.name);
 
-            Assert.IsNull(currentInProgressSceneGroup, "Scene group activation is not allowed when another async operation is in progress");
+            Assert.IsNull(inProgressSceneGroup, "Scene group activation is not allowed when another async operation is in progress");
             Assert.AreEqual(loadedButNotActivatedSceneGroups.Peek(), asyncSceneGroup, "Activation must activate the next loaded scene group in the queue");
             loadedButNotActivatedSceneGroups.Dequeue();
             asyncSceneGroupLoader.ActivateSceneGroupAsync((AsyncSceneGroupLoader.AsyncSceneGroup)asyncSceneGroup);
-            SetInProgressSceneGroup(asyncSceneGroup, () => { ActivateSceneGroupDone(asyncSceneGroup, onDone); });
+            inProgressSceneGroup = new InProgressSceneGroup(asyncSceneGroup, () => { ActivateSceneGroupDone(asyncSceneGroup, onDone); });
         }
 
         private void ActivateSceneGroupDone(SceneGroupHandle handle, OnDone onDone)
@@ -67,10 +80,10 @@ namespace SceneGroupLoader
 
             Debug.LogFormat("UnloadSceneGroup: unload sceneGroup {0}", ((AsyncSceneGroupLoader.AsyncSceneGroup)asyncSceneGroup).SceneGroup.name);
 
-            Assert.IsNull(currentInProgressSceneGroup, "Scene group load is not allowed when another async operation is in progress");
+            Assert.IsNull(inProgressSceneGroup, "Scene group load is not allowed when another async operation is in progress");
             Assert.AreEqual(0, loadedButNotActivatedSceneGroups.Count, "Unload is not allowed when another scene group has been loaded but not yet activated");
             asyncSceneGroupLoader.UnloadSceneGroupAsync((AsyncSceneGroupLoader.AsyncSceneGroup)asyncSceneGroup);
-            SetInProgressSceneGroup(asyncSceneGroup, () => { UnloadSceneGroupDone(asyncSceneGroup, onDone); });
+            inProgressSceneGroup = new InProgressSceneGroup(asyncSceneGroup, () => { UnloadSceneGroupDone(asyncSceneGroup, onDone); });
         }
 
         private void UnloadSceneGroupDone(SceneGroupHandle handle, OnDone onDone)
@@ -81,27 +94,16 @@ namespace SceneGroupLoader
                 onDone(handle);
         }
 
-        private void SetInProgressSceneGroup(SceneGroupHandle sceneGroupHandle, Action callback)
-        {
-            Assert.IsNotNull(sceneGroupHandle);
-            Assert.IsNotNull(callback);
-            currentInProgressSceneGroup = sceneGroupHandle;
-            currentCompletionCallback = callback;
-        }
-
         public void UpdateStatus()
         {
-            if (currentInProgressSceneGroup != null)
+            if (inProgressSceneGroup != null)
             {
-                Assert.IsNotNull(currentCompletionCallback);
+                asyncSceneGroupLoader.UpdateStatus((AsyncSceneGroupLoader.AsyncSceneGroup)inProgressSceneGroup.CurrentInProgressSceneGroup);
 
-                asyncSceneGroupLoader.UpdateStatus((AsyncSceneGroupLoader.AsyncSceneGroup)currentInProgressSceneGroup);
-
-                if (!asyncSceneGroupLoader.IsAsyncSceneGroupOperationInProgress((AsyncSceneGroupLoader.AsyncSceneGroup)currentInProgressSceneGroup))
+                if (!asyncSceneGroupLoader.IsAsyncSceneGroupOperationInProgress((AsyncSceneGroupLoader.AsyncSceneGroup)inProgressSceneGroup.CurrentInProgressSceneGroup))
                 {
-                    Action callback = currentCompletionCallback;
-                    currentCompletionCallback = null;
-                    currentInProgressSceneGroup = null;
+                    Action callback = inProgressSceneGroup.CurrentCompletionCallback;
+                    inProgressSceneGroup = null;
                     callback();
                 }
             }
