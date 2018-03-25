@@ -11,6 +11,7 @@ namespace SceneGroupLoader
         {
             NotLoaded,
             Loading,
+            LoadingAndActivating,
             Loaded,
             Activating,
             Activated,
@@ -18,7 +19,7 @@ namespace SceneGroupLoader
             Unloaded
         }
 
-        public class AsyncSceneGroup : SceneGroupLoader.SceneGroupHandle
+        public class AsyncSceneGroup : SceneGroupLoaderWithSeparateActivation.SceneGroupHandle
         {
             public class AsyncScene
             {
@@ -49,6 +50,19 @@ namespace SceneGroupLoader
             }
         }
 
+        public enum LoadAndActivationMode
+        {
+            Separate,
+            Joint,
+        }
+
+        private LoadAndActivationMode loadAndActivationMode;
+
+        public AsyncSceneGroupLoader(LoadAndActivationMode loadAndActivationMode)
+        {
+            this.loadAndActivationMode = loadAndActivationMode;
+        }
+
         public AsyncSceneGroup LoadSceneGroupAsync(SceneGroup sceneGroup)
         {
             Assert.IsNotNull(sceneGroup);
@@ -59,7 +73,7 @@ namespace SceneGroupLoader
             for (int i = 0; i < asyncSceneGroup.SceneGroup.Scenes.Count; i++)
                 LoadSceneAsync(asyncSceneGroup, i);
 
-            asyncSceneGroup.Status = LoadStatus.Loading;
+            asyncSceneGroup.Status = ((loadAndActivationMode == LoadAndActivationMode.Separate) ? LoadStatus.Loading : LoadStatus.LoadingAndActivating);
 
             return asyncSceneGroup;
         }
@@ -70,10 +84,12 @@ namespace SceneGroupLoader
             AsyncSceneGroup.AsyncScene asyncScene = asyncSceneGroup.AsyncScenes[i];
             Assert.AreEqual(LoadStatus.NotLoaded, asyncScene.Status);
             AsyncOperation op = SceneManager.LoadSceneAsync(asyncSceneGroup.SceneGroup.Scenes[i].SceneName, UnityEngine.SceneManagement.LoadSceneMode.Additive);
-            op.allowSceneActivation = false;
+            if (loadAndActivationMode == LoadAndActivationMode.Separate)
+                op.allowSceneActivation = false;
 
             asyncScene.AsyncOperation = op;
-            asyncScene.Status = LoadStatus.Loading;
+
+            asyncScene.Status = ((loadAndActivationMode == LoadAndActivationMode.Separate) ? LoadStatus.Loading : LoadStatus.LoadingAndActivating);
             asyncScene.Scene = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
         }
 
@@ -81,6 +97,7 @@ namespace SceneGroupLoader
         {
             Assert.IsNotNull(asyncSceneGroup);
             Assert.AreEqual(LoadStatus.Loaded, asyncSceneGroup.Status);
+            Assert.AreEqual(LoadAndActivationMode.Separate, loadAndActivationMode);
 
             for (int i = 0; i < asyncSceneGroup.SceneGroup.Scenes.Count; i++)
                 ActivateSceneAsync(asyncSceneGroup, i);
@@ -91,8 +108,11 @@ namespace SceneGroupLoader
         private void ActivateSceneAsync(AsyncSceneGroup asyncSceneGroup, int i)
         {
             Assert.IsNotNull(asyncSceneGroup);
+            Assert.AreEqual(LoadAndActivationMode.Separate, loadAndActivationMode);
+
             AsyncSceneGroup.AsyncScene asyncScene = asyncSceneGroup.AsyncScenes[i];
             Assert.AreEqual(LoadStatus.Loaded, asyncScene.Status);
+
             asyncScene.AsyncOperation.allowSceneActivation = true;
             asyncScene.Status = LoadStatus.Activating;
         }
@@ -111,8 +131,10 @@ namespace SceneGroupLoader
         private void UnloadSceneAsync(AsyncSceneGroup asyncSceneGroup, int i)
         {
             Assert.IsNotNull(asyncSceneGroup);
+
             AsyncSceneGroup.AsyncScene asyncScene = asyncSceneGroup.AsyncScenes[i];
             Assert.AreEqual(LoadStatus.Activated, asyncScene.Status);
+
             AsyncOperation op = SceneManager.UnloadSceneAsync(asyncScene.Scene);
             asyncScene.AsyncOperation = op;
             asyncScene.Status = LoadStatus.Unloading;
@@ -121,6 +143,7 @@ namespace SceneGroupLoader
         public void UpdateStatus(AsyncSceneGroup asyncSceneGroup)
         {
             Assert.IsNotNull(asyncSceneGroup);
+
             for (int i = 0; i < asyncSceneGroup.SceneGroup.Scenes.Count; i++)
                 UpdateStatus(asyncSceneGroup, i);
 
@@ -139,10 +162,14 @@ namespace SceneGroupLoader
             Assert.IsNotNull(asyncSceneGroup);
             AsyncSceneGroup.AsyncScene asyncScene = asyncSceneGroup.AsyncScenes[i];
 
+            // LoadAndActivationMode.Separate cases
             if (asyncScene.Status == LoadStatus.Loading && asyncScene.AsyncOperation.progress >= 0.9f)
                 asyncScene.Status = LoadStatus.Loaded;
-
             if (asyncScene.Status == LoadStatus.Activating && asyncScene.AsyncOperation.isDone)
+                asyncScene.Status = LoadStatus.Activated;
+
+            // LoadAndActivationMode.Joint cases
+            if (asyncScene.Status == LoadStatus.LoadingAndActivating && asyncScene.AsyncOperation.isDone)
                 asyncScene.Status = LoadStatus.Activated;
 
             if (asyncScene.Status == LoadStatus.Unloading && asyncScene.AsyncOperation.isDone)
@@ -167,6 +194,7 @@ namespace SceneGroupLoader
             bool asyncOperationInProgress =
                   (status == LoadStatus.Loading
                 || status == LoadStatus.Activating
+                || status == LoadStatus.LoadingAndActivating
                 || status == LoadStatus.Unloading);
 
             return asyncOperationInProgress;

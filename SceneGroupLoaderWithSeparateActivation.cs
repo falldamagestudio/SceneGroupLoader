@@ -7,13 +7,13 @@ using UnityEngine.Assertions;
 
 namespace SceneGroupLoader
 {
-    public class SceneGroupLoader {
+    public class SceneGroupLoaderWithSeparateActivation {
 
         public class SceneGroupHandle { }
 
         public delegate void OnDone(SceneGroupHandle sceneGroupHandle);
 
-        private AsyncSceneGroupLoader asyncSceneGroupLoader = new AsyncSceneGroupLoader();
+        private AsyncSceneGroupLoader asyncSceneGroupLoader = new AsyncSceneGroupLoader(AsyncSceneGroupLoader.LoadAndActivationMode.Separate);
 
         private class InProgressSceneGroup
         {
