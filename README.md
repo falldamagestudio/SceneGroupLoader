@@ -1,7 +1,7 @@
 # SceneGroupLoader
 Standardized logic for asynchronous loading/unloading of groups of Unity scenes
 
-# Purpose
+## Purpose
 
 This is an interface on top of Unity's LoadSceneAsync() / UnloadSceneAsync() methods that is more convenient, but also more restrictive, than Unity's own API. It is intended to remove long, static loading screens from games that have mostly linear flows. It will not work well for games that have a more free-streaming approach.
 
@@ -17,7 +17,7 @@ You must initiate activation of scene groups in the same order that you have ini
 
 You must not initiate unloading of a scene group when there are any scene groups which are loaded, but not yet activated.
 
-# How to use
+## How to use
 
 Create a master game scene for your game. This scene will only be unloaded at application exit. Place a game object with a SceneGroupLoaderComponent in that scene.
 
