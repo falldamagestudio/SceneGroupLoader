@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace SceneGroupLoader
+namespace SceneGroupLoader.JointActivation
 {
-    public class SceneGroupLoaderWithJointActivation {
+    public class SceneGroupLoader {
 
         public delegate void OnDone(SceneGroupHandle sceneGroupHandle);
 
