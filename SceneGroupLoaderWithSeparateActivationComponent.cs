@@ -11,12 +11,12 @@ namespace SceneGroupLoader
             SceneGroupLoader.LoadSceneGroup(sceneGroup, onDone);
         }
 
-        public void ActivateSceneGroup(SceneGroupLoaderWithSeparateActivation.SceneGroupHandle asyncSceneGroup, SceneGroupLoaderWithSeparateActivation.OnDone onDone)
+        public void ActivateSceneGroup(SceneGroupHandle asyncSceneGroup, SceneGroupLoaderWithSeparateActivation.OnDone onDone)
         {
             SceneGroupLoader.ActivateSceneGroup(asyncSceneGroup, onDone);
         }
 
-        public void UnloadSceneGroup(SceneGroupLoaderWithSeparateActivation.SceneGroupHandle asyncSceneGroup, SceneGroupLoaderWithSeparateActivation.OnDone onDone)
+        public void UnloadSceneGroup(SceneGroupHandle asyncSceneGroup, SceneGroupLoaderWithSeparateActivation.OnDone onDone)
         {
             SceneGroupLoader.UnloadSceneGroup(asyncSceneGroup, onDone);
         }

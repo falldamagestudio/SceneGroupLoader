@@ -19,7 +19,7 @@ namespace SceneGroupLoader
             Unloaded
         }
 
-        public class AsyncSceneGroup : SceneGroupLoaderWithSeparateActivation.SceneGroupHandle
+        public class AsyncSceneGroup : SceneGroupHandle
         {
             public class AsyncScene
             {
