@@ -45,4 +45,4 @@ Create a master game scene for your game. This scene will only be unloaded at ap
 
 Initiate load/activate/unload of various portions of your game through calls to that component.
 
-There is an example project available at https://github.com/Kalmalyzer/SceneGroupLoader-Example. It contains examples for both APIs.
+There is an example project available at https://github.com/falldamagestudio/SceneGroupLoader-Example. It contains examples for both APIs.
