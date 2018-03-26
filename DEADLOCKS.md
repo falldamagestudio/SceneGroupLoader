@@ -1,6 +1,10 @@
-# Race conditions when using separate scene activation
+# Deadlocks when using delayed scene activation
 
-Unity provides asynchronous APIs for loading and unloading scenes.
+Unity provides asynchronous APIs for loading and unloading scenes. It also has a feature for delaying activation until the user code requests it. 
+
+Improper use of the delayed-activation mechanism can lead to application deadlocks.
+
+All below observations have been performed in the Editor in Unity 2017.3.1f1.
 
 ## Starting observations
 
